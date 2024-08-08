@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MBTCharacter.h"
+
+#include "AbilitySystemComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -10,6 +12,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "MoveBuffTest/Data/MBTInputDataAsset.h"
+#include "MoveBuffTest/Player/MBTPlayerState.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -20,7 +24,7 @@ AMBTCharacter::AMBTCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -54,10 +58,49 @@ AMBTCharacter::AMBTCharacter()
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
 
-void AMBTCharacter::BeginPlay()
+void AMBTCharacter::InitASC()
 {
-	// Call the base class  
-	Super::BeginPlay();
+	AMBTPlayerState* MBTPlayerState = GetPlayerState<AMBTPlayerState>();
+	if (!ensureAlways(MBTPlayerState))
+	{
+		return;
+	}
+
+	ASC = MBTPlayerState->GetAbilitySystemComponent();
+
+	if (HasAuthority())
+	{
+		ASC->InitAbilityActorInfo(MBTPlayerState, this);
+
+		if (SprintGA)
+		{
+			ASC->K2_GiveAbility(SprintGA, 0, static_cast<int32>(EActiveAbility::Sprint));
+		}
+	}
+}
+
+void AMBTCharacter::SetupGASInput()
+{
+	if (!ensureAlways(InputDataAsset))
+	{
+		return;
+	}
+
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		EnhancedInputComponent->BindAction(InputDataAsset->SprintAction, ETriggerEvent::Started, this, &ThisClass::GASInputPressed, EActiveAbility::Sprint);
+		EnhancedInputComponent->BindAction(InputDataAsset->SprintAction, ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, EActiveAbility::Sprint);
+	}
+}
+
+void AMBTCharacter::GASInputPressed(EActiveAbility InputID)
+{
+	GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Yellow, TEXT("스프린트!"));
+}
+
+void AMBTCharacter::GASInputReleased(EActiveAbility InputID)
+{
+	GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Yellow, TEXT("스프린트..."));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -65,32 +108,63 @@ void AMBTCharacter::BeginPlay()
 
 void AMBTCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
+	if (!ensureAlways(InputDataAsset))
+	{
+		return;
+	}
+
 	// Add Input Mapping Context
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			Subsystem->AddMappingContext(InputDataAsset->DefaultMappingContext, 0);
 		}
 	}
-	
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		EnhancedInputComponent->BindAction(InputDataAsset->JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(InputDataAsset->JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMBTCharacter::Move);
+		EnhancedInputComponent->BindAction(InputDataAsset->MoveAction, ETriggerEvent::Triggered, this, &AMBTCharacter::Move);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMBTCharacter::Look);
+		EnhancedInputComponent->BindAction(InputDataAsset->LookAction, ETriggerEvent::Triggered, this, &AMBTCharacter::Look);
 	}
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
+
+	SetupGASInput();
+}
+
+UAbilitySystemComponent* AMBTCharacter::GetAbilitySystemComponent() const
+{
+	return ASC.Get();
+}
+
+void AMBTCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	InitASC();
+}
+
+void AMBTCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	InitASC();
+}
+
+void AMBTCharacter::BeginPlay()
+{
+	// Call the base class  
+	Super::BeginPlay();
 }
 
 void AMBTCharacter::Move(const FInputActionValue& Value)
@@ -106,7 +180,7 @@ void AMBTCharacter::Move(const FInputActionValue& Value)
 
 		// get forward vector
 		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
+
 		// get right vector 
 		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 

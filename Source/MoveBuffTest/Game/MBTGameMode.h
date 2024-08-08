@@ -6,7 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "MBTGameMode.generated.h"
 
-UCLASS(minimalapi)
+UCLASS(Abstract, minimalapi)
 class AMBTGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
