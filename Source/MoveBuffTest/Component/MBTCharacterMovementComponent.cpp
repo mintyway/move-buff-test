@@ -3,20 +3,20 @@
 
 #include "MBTCharacterMovementComponent.h"
 
+#include "MoveBuffTest/Character/MBTCharacter.h"
 
 UMBTCharacterMovementComponent::UMBTCharacterMovementComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
-void UMBTCharacterMovementComponent::BeginPlay()
+float UMBTCharacterMovementComponent::GetMaxSpeed() const
 {
-	Super::BeginPlay();
-}
+	AMBTCharacter* SourceCharacter = GetOwner<AMBTCharacter>();
+	if (!SourceCharacter)
+	{
+		return Super::GetMaxSpeed();
+	}
 
-
-void UMBTCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	return SourceCharacter->GetMoveSpeed();
 }

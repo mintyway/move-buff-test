@@ -8,6 +8,7 @@
 #include "Logging/LogMacros.h"
 #include "MBTCharacter.generated.h"
 
+class UMBTAttributSet;
 class UMBTInputDataAsset;
 class USpringArmComponent;
 class UCameraComponent;
@@ -43,6 +44,8 @@ public:
 
 	virtual void OnRep_PlayerState() override;
 
+	float GetMoveSpeed() const;
+
 protected:
 	// To add mapping context
 	virtual void BeginPlay();
@@ -74,6 +77,9 @@ protected:
 
 	UPROPERTY()
 	TWeakObjectPtr<UAbilitySystemComponent> ASC;
+
+	UPROPERTY()
+	TWeakObjectPtr<UMBTAttributSet> AttributeSet;
 
 	UPROPERTY(EditAnywhere, Category = "Design")
 	TObjectPtr<UMBTInputDataAsset> InputDataAsset; 

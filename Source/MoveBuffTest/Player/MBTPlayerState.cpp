@@ -20,3 +20,8 @@ UAbilitySystemComponent* AMBTPlayerState::GetAbilitySystemComponent() const
 {
 	return ASC;
 }
+
+UMBTAttributSet* AMBTPlayerState::GetAttributeSet() const
+{
+	return AttributeSet;
+}

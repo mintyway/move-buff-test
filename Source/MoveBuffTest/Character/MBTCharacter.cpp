@@ -12,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "MoveBuffTest/AbilitySystem/AttributeSet/MBTAttributSet.h"
 #include "MoveBuffTest/Component/MBTCharacterMovementComponent.h"
 #include "MoveBuffTest/Data/MBTInputDataAsset.h"
 #include "MoveBuffTest/Player/MBTPlayerState.h"
@@ -69,6 +70,7 @@ void AMBTCharacter::InitASC()
 	}
 
 	ASC = MBTPlayerState->GetAbilitySystemComponent();
+	AttributeSet = MBTPlayerState->GetAttributeSet();
 
 	if (HasAuthority())
 	{
@@ -97,12 +99,44 @@ void AMBTCharacter::SetupGASInput()
 
 void AMBTCharacter::GASInputPressed(EActiveAbility InputID)
 {
-	GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Yellow, TEXT("스프린트!"));
+	if (!ASC.Get())
+	{
+		return;
+	}
+
+	FGameplayAbilitySpec* GASpec = ASC->FindAbilitySpecFromInputID(static_cast<int32>(InputID));
+	if (!ensureAlways(GASpec))
+	{
+		return;
+	}
+
+	if (GASpec->IsActive())
+	{
+		ASC->AbilitySpecInputPressed(*GASpec);
+	}
+	else
+	{
+		ASC->TryActivateAbility(GASpec->Handle);
+	}
 }
 
 void AMBTCharacter::GASInputReleased(EActiveAbility InputID)
 {
-	GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Yellow, TEXT("스프린트..."));
+	if (!ASC.Get())
+	{
+		return;
+	}
+
+	FGameplayAbilitySpec* GASpec = ASC->FindAbilitySpecFromInputID(static_cast<int32>(InputID));
+	if (!ensureAlways(GASpec))
+	{
+		return;
+	}
+
+	if (GASpec->IsActive())
+	{
+		ASC->AbilitySpecInputReleased(*GASpec);
+	}
 }
 
 void AMBTCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -158,6 +192,16 @@ void AMBTCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	InitASC();
+}
+
+float AMBTCharacter::GetMoveSpeed() const
+{
+	if (!ensureAlways(AttributeSet.Get()))
+	{
+		return 0.0f;
+	}
+
+	return AttributeSet->GetMoveSpeed();
 }
 
 void AMBTCharacter::BeginPlay()

@@ -12,12 +12,22 @@ class MOVEBUFFTEST_API UMBTCharacterMovementComponent : public UCharacterMovemen
 {
 	GENERATED_BODY()
 
+	// class FMBTSavedMove : public FSavedMove_Character
+	// {
+	// public:
+	// 	using Super = FSavedMove_Character;
+	// };
+	//
+	// class FMBTNetworkPredictionData_Client_Character : public FNetworkPredictionData_Client_Character
+	// {
+	// public:
+	// 	using Super = FNetworkPredictionData_Client_Character;
+	//
+	// 	FMBTNetworkPredictionData_Client_Character(const UCharacterMovementComponent& ClientMovement);
+	// };
+
 public:
 	UMBTCharacterMovementComponent();
 
-protected:
-	virtual void BeginPlay() override;
-
-public:
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual float GetMaxSpeed() const override;
 };
