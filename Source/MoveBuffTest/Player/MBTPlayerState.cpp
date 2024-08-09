@@ -4,6 +4,7 @@
 #include "MBTPlayerState.h"
 
 #include "AbilitySystemComponent.h"
+#include "MoveBuffTest/AbilitySystem/AttributeSet/MBTAttributSet.h"
 
 AMBTPlayerState::AMBTPlayerState()
 {
@@ -11,6 +12,8 @@ AMBTPlayerState::AMBTPlayerState()
 
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	ASC->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	AttributeSet = CreateDefaultSubobject<UMBTAttributSet>(TEXT("AttributeSet"));
 }
 
 UAbilitySystemComponent* AMBTPlayerState::GetAbilitySystemComponent() const

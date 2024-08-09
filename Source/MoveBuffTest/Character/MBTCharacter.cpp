@@ -12,6 +12,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "MoveBuffTest/Component/MBTCharacterMovementComponent.h"
 #include "MoveBuffTest/Data/MBTInputDataAsset.h"
 #include "MoveBuffTest/Player/MBTPlayerState.h"
 
@@ -20,7 +21,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //////////////////////////////////////////////////////////////////////////
 // AMoveBuffTestCharacter
 
-AMBTCharacter::AMBTCharacter()
+AMBTCharacter::AMBTCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UMBTCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -102,9 +104,6 @@ void AMBTCharacter::GASInputReleased(EActiveAbility InputID)
 {
 	GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Yellow, TEXT("스프린트..."));
 }
-
-//////////////////////////////////////////////////////////////////////////
-// Input
 
 void AMBTCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

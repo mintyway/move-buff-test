@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "MBTPlayerState.generated.h"
 
+class UMBTAttributSet;
 /**
  * 
  */
@@ -23,4 +24,7 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "GAS")
 	TObjectPtr<UAbilitySystemComponent> ASC;
+
+	UPROPERTY(VisibleAnywhere, Category = "GAS")
+	TObjectPtr<UMBTAttributSet> AttributeSet; 
 };

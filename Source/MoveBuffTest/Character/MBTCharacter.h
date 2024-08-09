@@ -30,7 +30,7 @@ class AMBTCharacter : public ACharacter, public IAbilitySystemInterface
 	GENERATED_BODY()
 
 public:
-	AMBTCharacter();
+	AMBTCharacter(const FObjectInitializer& ObjectInitializer);
 
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
