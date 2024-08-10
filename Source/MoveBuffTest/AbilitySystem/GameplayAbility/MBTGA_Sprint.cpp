@@ -32,16 +32,10 @@ void UMBTGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 		return;
 	}
 
-	if (SourceCharacter->HasAuthority())
-	{
-		GEngine->AddOnScreenDebugMessage(0, 1.0f, FColor::Yellow, TEXT("스프린트 시작!"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::White, TEXT("스프린트 시작!"));
-	}
+	FColor LogColor = SourceCharacter->HasAuthority() ? FColor::Yellow : FColor::White;
+	GEngine->AddOnScreenDebugMessage(0, 1.0f, LogColor, TEXT("스프린트 시작!"));
 
-	FGameplayEffectSpecHandle GESpecHandle = SourceASC->MakeOutgoingSpec(SprintGE, 1.0f, SourceASC->MakeEffectContext());
+	FGameplayEffectSpecHandle GESpecHandle = MakeOutgoingGameplayEffectSpec(SprintGE);
 	if (!ensureAlways(GESpecHandle.IsValid()))
 	{
 		K2_EndAbility();
@@ -49,7 +43,9 @@ void UMBTGA_Sprint::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	GESpecHandle.Data->SetSetByCallerMagnitude(MBTTags::Attribute::MoveSpeed, SprintMultiplier);
-	SprintGEHandle = SourceASC->BP_ApplyGameplayEffectSpecToSelf(GESpecHandle);
+	SprintGEHandle = K2_ApplyGameplayEffectSpecToOwner(GESpecHandle);
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, LogColor, ActivationInfo.GetActivationPredictionKey().ToString());
 }
 
 void UMBTGA_Sprint::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
@@ -75,16 +71,10 @@ void UMBTGA_Sprint::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 		return;
 	}
 
-	if (SourceCharacter->HasAuthority())
-	{
-		GEngine->AddOnScreenDebugMessage(0, 1.0f, FColor::Yellow, TEXT("스프린트 종료!"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::White, TEXT("스프린트 종료!"));
-	}
+	FColor LogColor = SourceCharacter->HasAuthority() ? FColor::Yellow : FColor::White;
+	GEngine->AddOnScreenDebugMessage(0, 1.0f, LogColor, TEXT("스프린트 종료!"));
 
-	SourceASC->RemoveActiveGameplayEffect(SprintGEHandle);
+	BP_RemoveGameplayEffectFromOwnerWithHandle(SprintGEHandle);
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
